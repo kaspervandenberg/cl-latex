@@ -42,10 +42,6 @@
                       (section* "Menhirs en Bretagne")
                       "This is some text"))
 
-(document (section* "A simple document")
-          "This is a paragraph"
-          (enumerate "this" "is" "a" "list"))
-
 (defvar linebreak "\\linebreak~%"
   "Default linebreak sintax in Latex")
 
@@ -90,9 +86,8 @@
     (assert arg1)
     (concat (element "begin" arg1)
             (when arg2 (concat "{" arg2 "}"))
-            "~%~%"
-            (reduce #'concat-as-lines elements)
-            (if (> (length elements) 1) "~%" "~%~%")
+            "~%"
+            (apply #'concat-as-lines elements)
             (element "end" arg1))))
 
 (defun document (&rest elements)
@@ -117,14 +112,10 @@
   (apply #'element "subsubsection*" elements))
 
 (defun enumerate (&rest list-items)
-  (begin-end "enumerate"
-             (reduce #'concat-as-lines
-                     (mapcar #'item list-items))))
+  (apply #'begin-end "enumerate" (mapcar #'item list-items)))
 
 (defun itemize (&rest list-items)
-  (begin-end "itemize"
-             (reduce #'concat-as-lines
-                     (mapcar #'item list-items))))
+  (apply #'begin-end "itemize" (mapcar #'item list-items)))
 
 (defun item (&rest elements)
   (apply #'concat-as-string "\\item " elements))
