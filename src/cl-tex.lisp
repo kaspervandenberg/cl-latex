@@ -33,30 +33,15 @@
 |#
 
 (defun test1 ()
-  (latex :documentclass (:class :article :options "12pt")
-
-         :packages ((:name "crimson")
-                    (:name "inputenc" :options "utf8"))
-
-         :header ("\setlist[itemize]{label=\textbullet}"
-                  (setlength "\parskip" "1em"))
-
-         :document (document
-                    (section* "Menhirs en Bretagne")
-                    "This is some text")))
-
-(defmacro generate-elements ()
-  (loop :for element :in els
-     :for element-str := (format nil "~:@(~A~)" element)
-                                        ;            :collect `(defun ,element
-     :collect `(defun ,(intern (string-upcase element))
-                   (&rest elements)
-                 (apply #'element ,element elements))))
-
-(defparameter *elements*
-  '(:ABA :EBE :OBO))
-
-(defparameter els '("ggg" "fff" "hhh"))
+  (format t
+          (latex :documentclass (:class :article :options "12pt")
+                 :packages ((:name "crimson")
+                            (:name "inputenc" :options "utf8"))
+                 :header ("\\setlist[itemize]{label=\textbullet}"
+                          (setlength "\parskip" "1em"))
+                 :document (document
+                            (section* "Menhirs en Bretagne")
+                            "This is some text"))))
 
 (defvar *document-classes*
   '(:article :ieeetran :proc :report :book :slides :memoir :letter :beamer)
@@ -76,12 +61,18 @@
              (string-downcase (format nil "~a" class)))))
 
 (defun write-packages (packages)
-  (print packages)
-  "packages ")
+  (apply #'concat-as-lines
+         (loop :for package :in packages
+            :collect (element
+                      (list "usepackage" (getf package :options))
+                      (getf package :name)))))
 
 (defun write-header (header)
-  (print header)
-  "header ")
+  (apply #'concat-as-lines
+         (loop :for item :in header
+            :if (listp item)
+            :collect (apply #'funcall item)
+            :else :collect item)))
 
 (defvar linebreak "\\linebreak~%"
   "Default linebreak sintax in Latex")
@@ -118,11 +109,14 @@
 (defun element (args &rest rest)
   "Facilitate the creation of a LaTeX element string."
   (let ((arg1 (if (listp args) (car args) args))
-        (arg2 (when (listp args) (cadr args))))
+        (arg2 (when (listp args) (cadr args)))
+        (arg3 (or (when (listp args) (caddr args)) "[]")))
     (assert arg1)
     (surround-string (concat "\\"
                              arg1
-                             (when arg2 (concat "[" arg2 "]"))
+                             (when arg2 (concat (subseq arg3 0 1)
+                                                arg2
+                                                (subseq arg3 1 nil)))
                              "{")
                      "}"
                      (reduce #'concat-as-string rest))))
@@ -136,6 +130,9 @@
             "~%"
             (apply #'concat-as-lines elements)
             (element "end" arg1))))
+
+(defun setlength (item amount)
+  (element (list "setlength" item "{}") amount))
 
 (defun document (&rest elements)
   (apply #'begin-end "document" elements))
