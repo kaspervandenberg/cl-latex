@@ -4,6 +4,7 @@
 
 (in-package #:tex)
 
+#|
 (deflatex simple_document
     :documentclass (:article "12pt")
     :packages '(("crimson")
@@ -29,6 +30,7 @@
                 "This is some text"))
 
 (to-string simple_document)
+|#
 
 (defun test1 ()
   (latex :documentclass (:class :article :options "12pt")

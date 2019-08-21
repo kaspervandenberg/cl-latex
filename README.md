@@ -1,4 +1,5 @@
 # CL-TEX
 
-Modern LaTeX generation library for Common Lisp.
+LaTeX interface for Common Lisp.
 
+Work in progress.
