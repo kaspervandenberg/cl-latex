@@ -45,6 +45,19 @@
                     (section* "Menhirs en Bretagne")
                     "This is some text")))
 
+(defmacro generate-elements ()
+  (loop :for element :in els
+     :for element-str := (format nil "~:@(~A~)" element)
+                                        ;            :collect `(defun ,element
+     :collect `(defun ,(intern (string-upcase element))
+                   (&rest elements)
+                 (apply #'element ,element elements))))
+
+(defparameter *elements*
+  '(:ABA :EBE :OBO))
+
+(defparameter els '("ggg" "fff" "hhh"))
+
 (defvar *document-classes*
   '(:article :ieeetran :proc :report :book :slides :memoir :letter :beamer)
   "Generic document classes that come builtin with LaTeX.")
