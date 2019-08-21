@@ -30,17 +30,40 @@
 
 (to-string simple_document)
 
-(latex :documentclass (:article "12pt")
+(defun test1 ()
+  (latex :documentclass (:class :article :options "12pt")
 
-           :packages (("crimson")
-                      ("inputenc" :args '("utf8")))
+         :packages ((:name "crimson")
+                    (:name "inputenc" :options "utf8"))
 
-           :header ("\setlist[itemize]{label=\textbullet}"
-                    (setlength "\parskip" "1em"))
+         :header ("\setlist[itemize]{label=\textbullet}"
+                  (setlength "\parskip" "1em"))
 
-           :document (maketitle
-                      (section* "Menhirs en Bretagne")
-                      "This is some text"))
+         :document (document
+                    (section* "Menhirs en Bretagne")
+                    "This is some text")))
+
+(defvar *document-classes*
+  '(:article :ieeetran :proc :report :book :slides :memoir :letter :beamer)
+  "Generic document classes that come builtin with LaTeX.")
+
+(defmacro latex (&key documentclass packages header document)
+  `(concat (write-documentclass ',documentclass)
+           (write-packages ',packages)
+           (write-header ',header)
+           ,document))
+
+(defun write-documentclass (documentclass)
+  (print documentclass)
+  "doclass ")
+
+(defun write-packages (packages)
+  (print packages)
+  "packages ")
+
+(defun write-header (header)
+  (print header)
+  "header ")
 
 (defvar linebreak "\\linebreak~%"
   "Default linebreak sintax in Latex")
