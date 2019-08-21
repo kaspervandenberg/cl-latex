@@ -48,14 +48,17 @@
   "Generic document classes that come builtin with LaTeX.")
 
 (defmacro latex (&key documentclass packages header document)
-  `(concat (write-documentclass ',documentclass)
-           (write-packages ',packages)
-           (write-header ',header)
-           ,document))
+  `(concat-as-lines (write-documentclass ',documentclass)
+                    (write-packages ',packages)
+                    (write-header ',header)
+                    ,document))
 
 (defun write-documentclass (documentclass)
-  (print documentclass)
-  "doclass ")
+  (let ((class (getf documentclass :class))
+        (options (getf documentclass :options)))
+    (assert (position class *document-classes*))
+    (element (list "documentclass" options)
+             (string-downcase (format nil "~a" class)))))
 
 (defun write-packages (packages)
   (print packages)
@@ -97,11 +100,17 @@
   "Surround strings from `rest' with `str1' and `str2'."
   (concat str1 (reduce #'concat rest) str2))
 
-(defun element (element-string &rest rest)
+(defun element (args &rest rest)
   "Facilitate the creation of a LaTeX element string."
-  (surround-string (concat "\\" element-string "{")
-                    "}"
-                    (reduce #'concat-as-string rest)))
+  (let ((arg1 (if (listp args) (car args) args))
+        (arg2 (when (listp args) (cadr args))))
+    (assert arg1)
+    (surround-string (concat "\\"
+                             arg1
+                             (when arg2 (concat "[" arg2 "]"))
+                             "{")
+                     "}"
+                     (reduce #'concat-as-string rest))))
 
 (defun begin-end (args &rest elements)
   (let ((arg1 (if (listp args) (car args) args))
