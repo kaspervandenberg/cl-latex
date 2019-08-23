@@ -1,11 +1,10 @@
 ;;;; cl-tex.asd
 
 (asdf:defsystem #:cl-tex
-  :description "LaTeX interface for Common Lisp."
+  :description "Common Lisp library to generate LaTeX syntax."
   :author "Stefan Devai <stedevai@gmail.com>"
   :license "MIT"
-  :version "0.0.1"
+  :version "0.2.0"
   :serial t
-  :depends-on (#:str)
-  :components ((:file "src/package")
-               (:file "src/cl-tex")))
+  :components ((:file "source/package")
+               (:file "source/cl-tex")))

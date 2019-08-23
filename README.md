@@ -1,5 +1,5 @@
 # CL-TEX
 
-LaTeX interface for Common Lisp.
+Common Lisp library to generate LaTeX syntax.
 
 Work in progress.
