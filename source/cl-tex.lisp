@@ -121,6 +121,25 @@
                      "}"
                      (reduce #'concat-as-string rest))))
 
+(defun format-options (options)
+  "Receive a list of key and values, and return a string with formated options
+  for LaTeX.
+
+  Example:
+  (format-options '(width 2 height 4))
+  ;; => \"[width=2,height=4]\""
+  (let ((options-str
+         (loop :for v := 1 :then (+ v 2)
+            :for k := 0 :then (+ k 2)
+            :while (< v (length options))
+            :when (elt options v)
+            :collect (concat-as-string (string-downcase (elt options k))
+                                       "="
+                                       (elt options v)))))
+
+    (when options-str (concat "[" (reduce #'(lambda (s1 s2) (concat s1 "," s2))
+                                          options-str) "]"))))
+
 (defun begin-end (args &rest elements)
   (let ((arg1 (if (listp args) (car args) args))
         (arg2 (when (listp args) (cadr args))))
@@ -206,14 +225,6 @@
          "graphicspath"
          (mapcar #'(lambda (path) (surround-string "{" "}" path))
                  paths)))
-
-(defun format-options (options)
-  (loop :for v := 1 :then (+ v 2)
-     :for k := 0 :then (+ k 2)
-     :while (< v (length options))
-     :do (concat-as-string (print (elt options k)) (print (elt options v))))
-  (apply #'concat-as-string options))
-
 
 (defun includegraphics (graphics-name &key width height scale angle)
   (let ((options (format-options (list 'width width
