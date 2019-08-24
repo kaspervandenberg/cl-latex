@@ -193,3 +193,31 @@
 
 (defun uppercase (&rest elements)
   (apply #'element "uppercase" elements))
+
+(defun graphicspath (&rest paths)
+  "Return a graphicspath element with provided `paths' list.
+
+  Exemples:
+  (graphicspath \"path/to/images/\")
+  ;; => \"\\graphicspath{{path/to/images}}\"
+  (graphicspath \"./path-1/\" \"./path-2/\")
+  ;; => \"\\graphicspath{{path-1}{./path-2}}\""
+  (apply #'element
+         "graphicspath"
+         (mapcar #'(lambda (path) (surround-string "{" "}" path))
+                 paths)))
+
+(defun format-options (options)
+  (loop :for v := 1 :then (+ v 2)
+     :for k := 0 :then (+ k 2)
+     :while (< v (length options))
+     :)
+  (apply #'concat-as-string options))
+
+
+(defun includegraphics (graphics-name &key width height scale angle)
+  (let ((options (format-options (list 'width width
+                                       'height height
+                                       'scale scale
+                                       'angle angle))))
+  (element (concat "includegraphics" options) graphics-name)))
