@@ -74,7 +74,10 @@
             :collect (apply #'funcall item)
             :else :collect item)))
 
-(defvar linebreak "\\linebreak~%"
+(defvar linebreak "\\linebreak"
+  "Default linebreak sintax in Latex")
+
+(defvar centering "\\centering"
   "Default linebreak sintax in Latex")
 
 (defun concat (&rest strings)
@@ -232,3 +235,9 @@
                                        'scale scale
                                        'angle angle))))
   (element (concat "includegraphics" options) graphics-name)))
+
+(defun figure (position &rest elements)
+  (apply #'begin-end (list "figure" position) elements))
+
+(defun caption (&rest elements)
+  (apply #'element "caption" elements))
