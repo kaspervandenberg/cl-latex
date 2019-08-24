@@ -211,7 +211,7 @@
   (loop :for v := 1 :then (+ v 2)
      :for k := 0 :then (+ k 2)
      :while (< v (length options))
-     :)
+     :do (concat-as-string (print (elt options k)) (print (elt options v))))
   (apply #'concat-as-string options))
 
 
