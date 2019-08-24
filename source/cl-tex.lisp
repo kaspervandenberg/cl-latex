@@ -36,12 +36,21 @@
   (format t
           (latex :documentclass (:class :article :options "12pt")
                  :packages ((:name "crimson")
-                            (:name "inputenc" :options "utf8"))
+                            (:name "inputenc" :options "utf8")
+                            (:name "graphicx")
+                            (:name "float")
+                            (:name "enumitem")
+                            (:name "wrapfig"))
                  :preamble ("\\setlist[itemize]{label=\textbullet}"
-                          (setlength "\parskip" "1em"))
+                            (setlength "\\parskip" "1em")
+                            (graphicspath "./img/"))
                  :document (document
                             (section* "Menhirs en Bretagne")
-                            "This is some text"))))
+                            "This is some text"
+                            linebreak
+                            (figure "H"
+                                    (includegraphics "mad1" :scale "0.8")
+                                    (caption "This is a caption."))))))
 
 (defvar *document-classes*
   '(:article :ieeetran :proc :report :book :slides :memoir :letter :beamer)
@@ -57,14 +66,14 @@
   (let ((class (getf documentclass :class))
         (options (getf documentclass :options)))
     (assert (position class *document-classes*))
-    (element (list "documentclass" options)
+    (element (list "documentclass" (format-options options))
              (string-downcase (format nil "~a" class)))))
 
 (defun write-packages (packages)
   (apply #'concat-as-lines
          (loop :for package :in packages
             :collect (element
-                      (list "usepackage" (getf package :options))
+                      (list "usepackage" (format-options (getf package :options)))
                       (getf package :name)))))
 
 (defun write-header (header)
@@ -77,8 +86,16 @@
 (defvar linebreak "\\linebreak"
   "Default linebreak sintax in Latex")
 
-(defvar centering "\\centering"
-  "Default linebreak sintax in Latex")
+(defvar newline "\\newline")
+(defvar centering "\\centering")
+(defvar columnsep "\\columnsep")
+(defvar columnwidth "\\columnwidth")
+(defvar linewidth "\\linewidth")
+(defvar paperwidth "\\paperwidth")
+(defvar paperheight "\\paperheight")
+(defvar textwidth "\\textwidth")
+(defvar textheight "\\textheight")
+(defvar unitleght "\\unitleght")
 
 (defun concat (&rest strings)
   "Concatenate `strings' into a single string."
@@ -124,6 +141,14 @@
                      "}"
                      (reduce #'concat-as-string rest))))
 
+(defun element (args &rest rest)
+  (let ((arg1 (if (listp args) (car args) args))
+        (arg2 (when (listp args) (cadr args))))
+    (surround-string
+     (concat "\\" arg1 arg2 "{")
+     "}"
+     (reduce #'concat-as-string rest))))
+
 (defun format-options (options)
   "Receive a list of key and values, and return a string with formated options
   for LaTeX.
@@ -131,30 +156,37 @@
   Example:
   (format-options '(width 2 height 4))
   ;; => \"[width=2,height=4]\""
-  (let ((options-str
-         (loop :for v := 1 :then (+ v 2)
-            :for k := 0 :then (+ k 2)
-            :while (< v (length options))
-            :when (elt options v)
-            :collect (concat-as-string (string-downcase (elt options k))
-                                       "="
-                                       (elt options v)))))
+  (if (listp options)
+      (let ((options-str
+             (loop :for v := 1 :then (+ v 2)
+                :for k := 0 :then (+ k 2)
+                :while (< v (length options))
+                :when (elt options v)
+                :collect (concat-as-string (string-downcase (elt options k))
+                                           "="
+                                           (elt options v)))))
 
-    (when options-str (concat "[" (reduce #'(lambda (s1 s2) (concat s1 "," s2))
-                                          options-str) "]"))))
+        (when options-str (concat "["
+                                  (reduce #'(lambda (s1 s2) (concat s1 "," s2))
+                                          options-str)
+                                  "]")))
+      (concat "[" options "]")))
 
 (defun begin-end (args &rest elements)
-  (let ((arg1 (if (listp args) (car args) args))
-        (arg2 (when (listp args) (cadr args))))
-    (assert arg1)
-    (concat (element "begin" arg1)
-            (when arg2 (concat "{" arg2 "}"))
+  (let ((arg (if (listp args) (car args) args))
+        (pre-value (when (listp args) (cadr args)))
+        (pos-value (when (listp args) (caddr args))))
+    (assert arg)
+    (concat (if pre-value
+                (element (list "begin" pre-value) arg)
+                (element "begin" arg))
+            pos-value
             "~%"
             (apply #'concat-as-lines elements)
-            (element "end" arg1))))
+            (element "end" arg))))
 
 (defun setlength (item amount)
-  (element (list "setlength" item "{}") amount))
+  (element (list "setlength" (concat "{" item "}")) amount))
 
 (defun document (&rest elements)
   (apply #'begin-end "document" elements))
@@ -237,7 +269,7 @@
   (element (concat "includegraphics" options) graphics-name)))
 
 (defun figure (position &rest elements)
-  (apply #'begin-end (list "figure" position) elements))
+  (apply #'begin-end (list "figure" nil (concat "[" position "]")) elements))
 
 (defun caption (&rest elements)
   (apply #'element "caption" elements))
