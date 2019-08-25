@@ -4,44 +4,19 @@
 
 (in-package #:tex)
 
-#|
-(deflatex simple_document
-    :documentclass (:article "12pt")
-    :packages '(("crimson")
-                ("inputenc" :args '("utf8"))
-                ("fontenc" :args '("T1"))
-                ("natbib" :args '("super"))
-                ("babel" :args '("spanish"))
-                ("hyperref")
-                ("geometry")
-                ("titlesec")
-                ("enumitem" :args '("shortlabels"))
-                ("nowidows" :args '("all")))
-
-    :header '("\setlist[itemize]{label=\textbullet}"
-              "\geometry{a4paper, margin=1in}"
-              (setlength "\parskip" "1em")
-              (renewcommand "tiny" "normalsize")
-              "\titleformat{\section}[block]{\bfseries\filcenter}{}{1em}{}"
-              "\urlstyle{same}")
-
-    :document '(maketitle
-                (section* "Menhirs en Bretagne")
-                "This is some text"))
-
-(to-string simple_document)
-|#
-
 (defclass latex-object ()
   ((documentclass :initform '(:class :article) :initarg :documentclass :accessor documentclass-acc)
    (packages :initform nil :initarg :packages :accessor packages-acc)
    (preamble :initform nil :initarg :preamble :accessor preamble-acc)
-   (document :initform nil :initarg :document :accessor document-acc)))
+   (document :initform nil :initarg :document :accessor document-acc))
+
+  (:documentation "Hold information about a LaTeX file structure."))
 
 (defun make-latex (&key (documentclass '(:class :article))
                      (packages nil)
                      (preamble nil)
                      (document nil))
+  "Return a `latex-object' instance with provided params."
 
   (make-instance 'latex-object
                  :documentclass documentclass
@@ -50,6 +25,7 @@
                  :document document))
 
 (defun to-string (latex-obj)
+  "Return a `latex-object' formated as a LaTeX document string."
   (format nil (concat-as-lines (write-documentclass (documentclass-acc latex-obj))
                                (write-packages (packages-acc latex-obj))
                                (write-preamble (preamble-acc latex-obj))
@@ -97,6 +73,7 @@
   "Generic document classes that come builtin with LaTeX.")
 
 (defmacro latex (&key documentclass packages preamble document)
+  "Return a LaTeX document string."
   `(format nil (concat-as-lines (write-documentclass ',documentclass)
                                 (write-packages ',packages)
                                 (write-preamble ',preamble)
