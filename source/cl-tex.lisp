@@ -32,35 +32,75 @@
 (to-string simple_document)
 |#
 
+(defclass latex-object ()
+  ((documentclass :initform '(:class :article) :initarg :documentclass :accessor documentclass-acc)
+   (packages :initform nil :initarg :packages :accessor packages-acc)
+   (preamble :initform nil :initarg :preamble :accessor preamble-acc)
+   (document :initform nil :initarg :document :accessor document-acc)))
+
+(defun make-latex (&key (documentclass '(:class :article))
+                     (packages nil)
+                     (preamble nil)
+                     (document nil))
+
+  (make-instance 'latex-object
+                 :documentclass documentclass
+                 :packages packages
+                 :preamble preamble
+                 :document document))
+
+(defun to-string (latex-obj)
+  (format nil (concat-as-lines (write-documentclass (documentclass-acc latex-obj))
+                               (write-packages (packages-acc latex-obj))
+                               (write-preamble (preamble-acc latex-obj))
+                               (apply #'begin-end "document" (document-acc latex-obj)))))
+
 (defun test1 ()
-  (format t
-          (latex :documentclass (:class :article :options "12pt")
-                 :packages ((:name "crimson")
-                            (:name "inputenc" :options "utf8")
-                            (:name "graphicx")
-                            (:name "float")
-                            (:name "enumitem")
-                            (:name "wrapfig"))
-                 :preamble ("\\setlist[itemize]{label=\textbullet}"
-                            (setlength "\\parskip" "1em")
-                            (graphicspath "./img/"))
-                 :document (document
-                            (section* "Menhirs en Bretagne")
-                            "This is some text"
-                            linebreak
-                            (figure "H"
-                                    (includegraphics "mad1" :scale "0.8")
-                                    (caption "This is a caption."))))))
+  (latex :documentclass (:class :article :options "12pt")
+         :packages ((:name "crimson")
+                    (:name "inputenc" :options "utf8")
+                    (:name "graphicx")
+                    (:name "float")
+                    (:name "enumitem")
+                    (:name "wrapfig"))
+         :preamble ("\\setlist[itemize]{label=\textbullet}"
+                    (setlength "\\parskip" "1em")
+                    (graphicspath "./img/"))
+         :document (document (section* "Menhirs en Bretagne")
+                             "This is some text"
+                             linebreak
+                             (figure "H"
+                                     (includegraphics "mad1" :scale "0.8")
+                                     (caption "This is a caption.")))))
+
+(defun test2 ()
+  (let ((ltx (make-latex :documentclass '(:class :article :options "12pt")
+                         :packages '((:name "crimson")
+                                     (:name "inputenc" :options "utf8")
+                                     (:name "graphicx")
+                                     (:name "float")
+                                     (:name "enumitem")
+                                     (:name "wrapfig"))
+                         :preamble (list "\\setlist[itemize]{label=\textbullet}"
+                                         (setlength "\\parskip" "1em")
+                                         (graphicspath "./img/"))
+                         :document (list (section* "Menhirs en Bretagne")
+                                         "This is some text"
+                                         linebreak
+                                         (figure "H"
+                                                 (includegraphics "mad1" :scale "0.8")
+                                                 (caption "This is a caption."))))))
+    (to-string ltx)))
 
 (defvar *document-classes*
   '(:article :ieeetran :proc :report :book :slides :memoir :letter :beamer)
   "Generic document classes that come builtin with LaTeX.")
 
 (defmacro latex (&key documentclass packages preamble document)
-  `(concat-as-lines (write-documentclass ',documentclass)
-                    (write-packages ',packages)
-                    (write-header ',preamble)
-                    ,document))
+  `(format nil (concat-as-lines (write-documentclass ',documentclass)
+                                (write-packages ',packages)
+                                (write-preamble ',preamble)
+                                ,document)))
 
 (defun write-documentclass (documentclass)
   (let ((class (getf documentclass :class))
@@ -76,9 +116,9 @@
                       (list "usepackage" (format-options (getf package :options)))
                       (getf package :name)))))
 
-(defun write-header (header)
+(defun write-preamble (preamble)
   (apply #'concat-as-lines
-         (loop :for item :in header
+         (loop :for item :in preamble
             :if (listp item)
             :collect (apply #'funcall item)
             :else :collect item)))
@@ -86,7 +126,11 @@
 (defvar linebreak "\\linebreak"
   "Default linebreak sintax in Latex")
 
+(defvar maketitle "\\maketitle")
+(defvar tableofcontents "\\tableofcontents")
 (defvar newline "\\newline")
+(defvar newpage "\\newpage")
+(defvar ldots "\\ldots")
 (defvar centering "\\centering")
 (defvar columnsep "\\columnsep")
 (defvar columnwidth "\\columnwidth")
@@ -127,27 +171,15 @@
   (concat str1 (reduce #'concat rest) str2))
 
 (defun element (args &rest rest)
-  "Facilitate the creation of a LaTeX element string."
-  (let ((arg1 (if (listp args) (car args) args))
-        (arg2 (when (listp args) (cadr args)))
-        (arg3 (or (when (listp args) (caddr args)) "[]")))
-    (assert arg1)
-    (surround-string (concat "\\"
-                             arg1
-                             (when arg2 (concat (subseq arg3 0 1)
-                                                arg2
-                                                (subseq arg3 1 nil)))
-                             "{")
-                     "}"
-                     (reduce #'concat-as-string rest))))
-
-(defun element (args &rest rest)
   (let ((arg1 (if (listp args) (car args) args))
         (arg2 (when (listp args) (cadr args))))
     (surround-string
      (concat "\\" arg1 arg2 "{")
      "}"
      (reduce #'concat-as-string rest))))
+
+(defun % (&rest elements)
+  (apply #'concat-as-string "% " elements))
 
 (defun format-options (options)
   "Receive a list of key and values, and return a string with formated options
@@ -157,7 +189,7 @@
   (format-options '(width 2 height 4))
   ;; => \"[width=2,height=4]\""
   (if (listp options)
-      (let ((options-str
+      (let ((options-list
              (loop :for v := 1 :then (+ v 2)
                 :for k := 0 :then (+ k 2)
                 :while (< v (length options))
@@ -166,10 +198,9 @@
                                            "="
                                            (elt options v)))))
 
-        (when options-str (concat "["
-                                  (reduce #'(lambda (s1 s2) (concat s1 "," s2))
-                                          options-str)
-                                  "]")))
+        (when options-list (concat "["
+                                   (format nil "~{~A~^,~}" options-list)
+                                   "]")))
       (concat "[" options "]")))
 
 (defun begin-end (args &rest elements)
@@ -188,8 +219,23 @@
 (defun setlength (item amount)
   (element (list "setlength" (concat "{" item "}")) amount))
 
+(defun include (filename)
+  (element "include" filename))
+
+(defun includeonly (&rest files)
+  (element "includeonly" (format nil "~{~A~^,~}" files)))
+
+(defun input (filename)
+  (element "input" filename))
+
 (defun document (&rest elements)
   (apply #'begin-end "document" elements))
+
+(defun pagestyle (style)
+  (element "pagestyle" style))
+
+(defun thispagestyle (style)
+  (element "thispagestyle" style))
 
 (defun title (&rest elements)
   (apply #'element "title" elements))
