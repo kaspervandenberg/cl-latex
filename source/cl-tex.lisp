@@ -31,42 +31,42 @@
                                (write-preamble (preamble-acc latex-obj))
                                (apply #'begin-end "document" (document-acc latex-obj)))))
 
-(defun test1 ()
-  (latex :documentclass (:class :article :options "12pt")
-         :packages ((:name "crimson")
-                    (:name "inputenc" :options "utf8")
-                    (:name "graphicx")
-                    (:name "float")
-                    (:name "enumitem")
-                    (:name "wrapfig"))
-         :preamble ("\\setlist[itemize]{label=\textbullet}"
-                    (setlength "\\parskip" "1em")
-                    (graphicspath "./img/"))
-         :document (document (section* "Menhirs en Bretagne")
-                             "This is some text"
-                             linebreak
-                             (figure "H"
-                                     (includegraphics "mad1" :scale "0.8")
-                                     (caption "This is a caption.")))))
+;; (defun test1 ()
+;;   (latex :documentclass (:class :article :options "12pt")
+;;          :packages ((:name "crimson")
+;;                     (:name "inputenc" :options "utf8")
+;;                     (:name "graphicx")
+;;                     (:name "float")
+;;                     (:name "enumitem")
+;;                     (:name "wrapfig"))
+;;          :preamble ("\\setlist[itemize]{label=\textbullet}"
+;;                     (setlength "\\parskip" "1em")
+;;                     (graphicspath "./img/"))
+;;          :document (document (section* "Menhirs en Bretagne")
+;;                              "This is some text"
+;;                              linebreak
+;;                              (figure "H"
+;;                                      (includegraphics "mad1" :scale "0.8")
+;;                                      (caption "This is a caption.")))))
 
-(defun test2 ()
-  (let ((ltx (make-latex :documentclass '(:class :article :options "12pt")
-                         :packages '((:name "crimson")
-                                     (:name "inputenc" :options "utf8")
-                                     (:name "graphicx")
-                                     (:name "float")
-                                     (:name "enumitem")
-                                     (:name "wrapfig"))
-                         :preamble (list "\\setlist[itemize]{label=\textbullet}"
-                                         (setlength "\\parskip" "1em")
-                                         (graphicspath "./img/"))
-                         :document (list (section* "Menhirs en Bretagne")
-                                         "This is some text"
-                                         linebreak
-                                         (figure "H"
-                                                 (includegraphics "mad1" :scale "0.8")
-                                                 (caption "This is a caption."))))))
-    (to-string ltx)))
+;; (defun test2 ()
+;;   (let ((ltx (make-latex :documentclass '(:class :article :options "12pt")
+;;                          :packages '((:name "crimson")
+;;                                      (:name "inputenc" :options "utf8")
+;;                                      (:name "graphicx")
+;;                                      (:name "float")
+;;                                      (:name "enumitem")
+;;                                      (:name "wrapfig"))
+;;                          :preamble (list "\\setlist[itemize]{label=\textbullet}"
+;;                                          (setlength "\\parskip" "1em")
+;;                                          (graphicspath "./img/"))
+;;                          :document (list (section* "Menhirs en Bretagne")
+;;                                          "This is some text"
+;;                                          linebreak
+;;                                          (figure "H"
+;;                                                  (includegraphics "mad1" :scale "0.8")
+;;                                                  (caption "This is a caption."))))))
+;;     (to-string ltx)))
 
 (defvar *document-classes*
   '(:article :ieeetran :proc :report :book :slides :memoir :letter :beamer)
