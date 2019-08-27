@@ -125,16 +125,20 @@
 (defun concat-as-string (&rest args)
   "Concatenate `args' as strings into a single string. If any of the
    arguments is not a string, it is converted with `write-to-string'."
-  (reduce
-   #'(lambda (arg1 arg2)
-       (concat
-        (if (stringp arg1)
-            arg1
-            (write-to-string arg1))
-        (if (stringp arg2)
-            arg2
-            (write-to-string arg2))))
-   args))
+  (let ((concat-strs
+         (reduce
+          #'(lambda (arg1 arg2)
+              (concat
+               (when arg1
+                 (if (stringp arg1)
+                     arg1
+                     (write-to-string arg1)))
+               (when arg2
+                 (if (stringp arg2)
+                     arg2
+                     (write-to-string arg2)))))
+          args)))
+    (or concat-strs "")))
 
 (defun concat-as-lines (&rest args)
   "Concatenate `args' separating each other with a newline character."
