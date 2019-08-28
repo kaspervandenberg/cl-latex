@@ -52,3 +52,7 @@
     (ok (equal (begin-end "arg" "test") "\\begin{arg}~%test~%\\end{arg}"))
     (ok (equal (begin-end "arg" (section (textbf (emph (noindent (uppercase "test"))))))
                "\\begin{arg}~%\\section{\\textbf{\\emph{\\noindent{\\uppercase{test}}}}}~%\\end{arg}"))))
+
+(deftest misc
+  (testing "formatting options"
+    (ok (equal "[width=2,height=4]" (tex::format-options '(width 2 height 4))))))
