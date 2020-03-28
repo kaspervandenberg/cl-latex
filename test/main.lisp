@@ -6,6 +6,7 @@
   (:use #:cl #:rove #:tex)
   (:shadowing-import-from #:rove
                           #:*debug-on-error*))
+
 (in-package #:cl-tex/tests/main)
 
 (deftest string-manipulation-test
@@ -37,7 +38,7 @@
     (ok (equal "aa11" (tex::concat-as-string "aa" 11))))
 
   (testing "concat as lines"
-    (ok (equal "aabbcc" (tex::concat-as-lines "aa" nil nil "bb" "cc")))
+    (ok (equal "aa~%bb~%cc~%" (tex::concat-as-lines "aa" nil nil "bb" "cc")))
     (ok (equal "" (tex::concat-as-lines nil)))
     (ok (equal "aa~%" (tex::concat-as-lines "aa")))
     (ok (equal "aa~%bb~%cc~%dd~%ee~%ff~%" (tex::concat-as-lines "aa" "bb" "cc" "dd" "ee" "ff")))))

@@ -118,6 +118,14 @@
 (defvar textheight "\\textheight")
 (defvar unitleght "\\unitleght")
 
+(defun empty? (string)
+  "Return t if `string' is empty or nil, return nil otherwise."
+  (zerop (length string)))
+
+(defun not-empty? (string)
+  "Return t if `string' is not empty, return nil otherwise."
+  (not (empty? string)))
+
 (defun concat (&rest strings)
   "Concatenate `strings' into a single string."
   (apply #'concatenate 'string strings))
@@ -142,10 +150,16 @@
 
 (defun concat-as-lines (&rest args)
   "Concatenate `args' separating each other with a newline character."
-  (concat (reduce
-           #'(lambda (arg1 arg2) (concat-as-string arg1 "~%" arg2))
-           args)
-          "~%"))
+  (let ((concatenated-string
+		  (reduce
+		   (lambda (arg1 arg2)
+			 (if (or (null arg1) (null arg2))
+				 (concat-as-string arg1 arg2)
+				 (concat-as-string arg1 "~%" arg2)))
+		   args)))
+	(if (not-empty? concatenated-string)
+		(concat-as-string concatenated-string "~%") ; Add linebreak at the end of the final string
+		"")))
 
 (defun surround-string (str1 str2 &rest rest)
   "Surround strings from `rest' with `str1' and `str2'."
