@@ -4,6 +4,10 @@
 
 (in-package #:tex)
 
+(defparameter *default-document-layout*
+  "teste"
+  "Default LaTeX layout used if no layout was provided by the user.")
+
 (defclass latex-object ()
   ((documentclass :initform '(:class :article) :initarg :documentclass :accessor documentclass-acc)
    (packages :initform nil :initarg :packages :accessor packages-acc)
@@ -11,6 +15,39 @@
    (document :initform nil :initarg :document :accessor document-acc))
 
   (:documentation "Hold information about a LaTeX file structure."))
+
+(defclass latex-document ()
+  ((layout       :initform nil
+				 :initarg :layout
+				 :accessor layout
+				 :documentation "String containing a latex layout.")
+   
+   (layout-file  :initform nil
+				 :initarg :layout-file
+				 :accessor layout-file
+				 :documentation "Path to a file containing a latex layout.")
+   
+   (body         :initform nil
+				 :accessor body
+				 :documentation "Body of the LaTeX document."))
+  
+  (:documentation "Hold information about a LaTeX document."))
+
+(defmethod initialize-instance :after ((doc latex-document) &key)
+  (let ((layout-file (layout-file doc)))
+	(when (empty? (layout doc))
+	  (if (not-empty? layout-file)
+		  (setf (layout doc) (load-layout-file layout-file))
+		  (setf (layout doc) *default-document-layout*))))
+  
+  :documentation "If no layout was provided, initialize it with a default layout.")
+
+(defun load-layout-file (file-path)
+  "Load a LaTeX layout file from `file-path'."
+  (with-open-file (stream file-path)
+	(let ((contents (make-string (file-length stream))))
+	  (read-sequence contents stream)
+	  contents)))
 
 (defun make-latex (&key (documentclass '(:class :article))
                      (packages nil)
