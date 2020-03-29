@@ -2,12 +2,12 @@
 ;;;; main.lisp
 
 (in-package #:cl-user)
-(defpackage #:cl-tex/tests/main
+(defpackage #:cl-latex/tests/main
   (:use #:cl #:rove #:tex)
   (:shadowing-import-from #:rove
                           #:*debug-on-error*))
 
-(in-package #:cl-tex/tests/main)
+(in-package #:cl-latex/tests/main)
 
 (defparameter *latex-object-result* "\\documentclass[12pt]{article}~%\\usepackage{crimson}~%\\usepackage[utf8]{inputenc}~%\\usepackage{float}~%\\usepackage{enumitem}~%\\usepackage{wrapfig}~%~%\\setlist[itemize]{label=textbullet}~%\\setlength{\\parskip}{1em}~%~%\\usepackage{hyperref}~%\\usepackage[T1]{fontenc}~%~%\\begin{document}~%~%\\section*{Menhirs en Bretagne}~%This is some text~%~%~%\\end{document}~%")
 (defparameter *latex-macro-result* "\\documentclass[12pt]{article}~%\\usepackage{crimson}~%\\usepackage[utf8]{inputenc}~%\\usepackage{float}~%\\usepackage{enumitem}~%\\usepackage{wrapfig}~%~%\\setlist[itemize]{label=textbullet}~%\\setlength{\\parskip}{1em}~%~%\\begin{document}~%~%\\section*{Menhirs en Bretagne}~%This is some text~%~%\\end{document}~%")

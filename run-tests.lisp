@@ -2,7 +2,7 @@
 
 (load #P"~/.quicklisp/setup.lisp")
 (ql:quickload :rove)
-(ql:quickload :cl-tex)
+(ql:quickload :cl-latex)
 
-(asdf:test-system :cl-tex)
+(asdf:test-system :cl-latex)
 
