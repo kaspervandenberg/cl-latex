@@ -6,8 +6,12 @@
   :license "MIT"
   :version "0.3.0"
   :serial t
-  :components ((:file "source/package")
-               (:file "source/cl-latex"))
+  :components ((:module "source"
+                :components
+                ((:file "package")
+                 (:file "string")
+                 (:file "syntax" :depends-on ("string"))
+                 (:file "cl-latex" :depends-on ("string" "syntax")))))
   :in-order-to ((test-op (test-op :cl-latex/test))))
 
 (asdf:defsystem #:cl-latex/test
