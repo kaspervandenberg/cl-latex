@@ -4,7 +4,7 @@
   :description "Common Lisp library for LaTeX syntax generation."
   :author "Stefan Devai <stedevai@gmail.com>"
   :license "MIT"
-  :version "0.3.0"
+  :version "0.4.1"
   :serial t
   :components ((:module "source"
                 :components

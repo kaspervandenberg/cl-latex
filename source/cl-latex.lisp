@@ -49,12 +49,14 @@
 
 (defmethod to-string ((latex-doc latex-document))
   "Return a `latex-document' formated as a LaTeX document string."
-  (let ((header-string (format
-                        nil
-                        (concat-as-lines (write-documentclass (documentclass latex-doc))
-                                         (write-packages (packages latex-doc))
-                                         (write-preamble (preamble latex-doc))))))
-    (concat-as-string header-string (format nil (insert-body latex-doc)) (format nil "~%"))))
+  (if (layout-file latex-doc)
+      (insert-body latex-doc)
+      (let ((header-string
+              (format nil
+                      (concat-as-lines (write-documentclass (documentclass latex-doc))
+                                       (write-packages (packages latex-doc))
+                                       (write-preamble (preamble latex-doc))))))
+        (concat-as-string header-string (format nil (insert-body latex-doc)) (format nil "~%")))))
 
 (defmethod insert-body ((latex-doc latex-document))
   "Insert `latex-doc''s body in the layout.
@@ -66,7 +68,7 @@
 (defmethod generate-pdf (filename (latex-doc latex-document))
   "Uses latexmk or pdflatex to generate a pdf from the object."
   (let ((latexmk-exists? (/= 1 (multiple-value-last
-                                (uiop:run-program "which latexm"
+                                (uiop:run-program "which latexmk"
                                                   :output :string
                                                   :ignore-error-status t
                                                   :error-output t))))
