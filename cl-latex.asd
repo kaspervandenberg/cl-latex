@@ -19,7 +19,11 @@
   :author "Stefan Devai <stedevai@gmail.com>"
   :license "MIT"
   :depends-on (:cl-latex :rove)
+  :serial t
   :components ((:module "test"
                 :components
-                ((:file "main"))))
+                ((:file "package")
+                 (:file "string")
+                 (:file "syntax")
+                 (:file "integration"))))
   :perform (asdf:test-op (op c) (uiop:symbol-call :rove '#:run c)))
