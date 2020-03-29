@@ -66,7 +66,7 @@
 (defmethod generate-pdf (filename (latex-doc latex-document))
   "Uses latexmk or pdflatex to generate a pdf from the object."
   (let ((latexmk-exists? (/= 1 (multiple-value-last
-                                (uiop:run-program "which latexmk"
+                                (uiop:run-program "which latexm"
                                                   :output :string
                                                   :ignore-error-status t
                                                   :error-output t))))
@@ -84,16 +84,27 @@
               (generate-pdf-from-string filename latex-string :generator :pdflatex))))))
 
 (defun generate-pdf-from-string (filename string &key generator)
-  (format t "~a~%" generator))
+  (let ((latex-file (concat-as-string filename ".tex")))
+    (save-to-file latex-file string)
+    (let ((command (concat-as-string
+                    (ecase generator
+                      (:latexmk "latexmk -pdf ")
+                      (:pdflatex "pdflatex "))
+                    filename)))
+      (uiop:run-program command :output t :error-output t)
+      (if (equal generator :latexmk)
+          (uiop:run-program (concat-as-string "latexmk -c " filename ".pdf")
+                            :output t :error-output t)
+          (clean-pdflatex-aux-files filename)))))
 
-(defun generate-pdf-from-string (filename string &key generator)
-  (save-to-file string (concat-as-string filename ".tex"))
-  (let ((command (concat-as-string
-                  (ecase generator
-                    (:latexmk "latexmk -pdf ")
-                    (:pdflatex "pdflatex "))
-                  filename)))
-    (uiop:run-program command :output t)))
+(defun clean-pdflatex-aux-files (filename)
+  (remove-file (concat-as-string filename ".aux"))
+  (remove-file (concat-as-string filename ".log"))
+  (remove-file (concat-as-string filename ".out")))
+
+(defun remove-file (filename)
+  (uiop:run-program (concat-as-string "rm -f " filename)
+                    :output t :error-output t))
 
 (defun save-to-file (filename string)
   (with-open-file (stream filename
@@ -144,15 +155,16 @@
                (string-downcase (format nil "~a" class))))))
 
 (defun write-packages (packages)
-  (apply #'concat-as-lines
-         (loop :for package :in packages
-               :collect (element
-                         (list "usepackage" (format-options (getf package :options)))
-                         (getf package :name)))))
+  (when packages
+    (apply #'concat-as-lines
+           (loop :for package :in packages
+                 :collect (element
+                           (list "usepackage" (format-options (getf package :options)))
+                           (getf package :name))))))
 
 (defun write-preamble (preamble)
-  (apply #'concat-as-lines
-         (loop :for item :in preamble
-               :if (listp item)	:collect (apply #'funcall item)
-                 :else :collect item)))
-
+  (when preamble
+    (apply #'concat-as-lines
+           (loop :for item :in preamble
+                 :if (listp item)	:collect (apply #'funcall item)
+                   :else :collect item))))
