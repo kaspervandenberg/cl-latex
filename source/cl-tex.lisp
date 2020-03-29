@@ -5,31 +5,36 @@
 (in-package #:tex)
 
 (defparameter *default-document-layout*
-  "teste"
+  "\\usepackage{hyperref}~%\\usepackage[T1]{fontenc}~%~%\\begin{document}~%~%%cl-latex%~%~%\\end{document}"
   "Default LaTeX layout used if no layout was provided by the user.")
 
-(defclass latex-object ()
-  ((documentclass :initform '(:class :article) :initarg :documentclass :accessor documentclass-acc)
-   (packages :initform nil :initarg :packages :accessor packages-acc)
-   (preamble :initform nil :initarg :preamble :accessor preamble-acc)
-   (document :initform nil :initarg :document :accessor document-acc))
-
-  (:documentation "Hold information about a LaTeX file structure."))
-
 (defclass latex-document ()
-  ((layout       :initform nil
-				 :initarg :layout
-				 :accessor layout
-				 :documentation "String containing a latex layout.")
+  ((layout         :initform nil
+				   :initarg :layout
+				   :accessor layout
+				   :documentation "String containing a latex layout.")
    
-   (layout-file  :initform nil
-				 :initarg :layout-file
-				 :accessor layout-file
-				 :documentation "Path to a file containing a latex layout.")
+   (layout-file    :initform nil
+				   :initarg :layout-file
+				   :accessor layout-file
+				   :documentation "Path to a file containing a latex layout.")
    
-   (body         :initform nil
-				 :accessor body
-				 :documentation "Body of the LaTeX document."))
+   (documentclass  :initform '(:class :article)
+				   :initarg :documentclass
+				   :accessor documentclass)
+   
+   (packages       :initform nil
+				   :initarg :packages
+				   :accessor packages)
+   
+   (preamble       :initform nil
+				   :initarg :preamble
+				   :accessor preamble)
+   
+   (body           :initform nil
+				   :initarg :body
+				   :accessor body
+				   :documentation "Body of the LaTeX document."))
   
   (:documentation "Hold information about a LaTeX document."))
 
@@ -49,72 +54,85 @@
 	  (read-sequence contents stream)
 	  contents)))
 
-(defun make-latex (&key (documentclass '(:class :article))
-                     (packages nil)
-                     (preamble nil)
-                     (document nil))
-  "Return a `latex-object' instance with provided params."
-
-  (make-instance 'latex-object
+(defun make-latex (&key (layout nil)
+							  (layout-file nil)
+							  (documentclass '(:class :article))
+							  (packages nil)
+							  (preamble nil)
+							  (body nil))
+  "Return a `latex-document' instance with provided params."
+  (make-instance 'latex-document
+				 :layout layout
+				 :layout-file layout-file
                  :documentclass documentclass
                  :packages packages
                  :preamble preamble
-                 :document document))
+                 :body body))
 
-(defun to-string (latex-obj)
-  "Return a `latex-object' formated as a LaTeX document string."
-  (format nil (concat-as-lines (write-documentclass (documentclass-acc latex-obj))
-                               (write-packages (packages-acc latex-obj))
-                               (write-preamble (preamble-acc latex-obj))
-                               (apply #'begin-end "document" (document-acc latex-obj)))))
+(defmethod to-string ((latex-doc latex-document))
+  "Return a `latex-document' formated as a LaTeX document string."
+  (let ((header-string (format
+																								nil
+																								(concat-as-lines (write-documentclass (documentclass latex-doc))
+																																									(write-packages (packages latex-doc))
+																																									(write-preamble (preamble latex-doc))))))
+				(concat-as-string header-string (format nil (insert-body latex-doc)) (format nil "~%"))))
+
+(defmethod insert-body ((latex-doc latex-document))
+  "Insert `latex-doc''s body in the layout.
+   The point of insertion in the layout is defined by the string `%cl-latex%'."
+  (replace-string "%cl-latex%"
+				  (format nil (apply #'concat-as-lines (body latex-doc)))
+				  (layout latex-doc)))
+
+(defun replace-string (old new string)
+  "Return a string with `old' replaced by `new' in `string'."
+  (let ((old-location (search old string)))
+				(if old-location
+								(concat-as-string (subseq string 0 old-location)
+																										new
+																										(subseq string (+ old-location (length old))))
+								(concat-as-string string new)))) ; If old is not found, concat new and string
 
 ;; (defun test1 ()
 ;;   (latex :documentclass (:class :article :options "12pt")
 ;;          :packages ((:name "crimson")
 ;;                     (:name "inputenc" :options "utf8")
-;;                     (:name "graphicx")
 ;;                     (:name "float")
 ;;                     (:name "enumitem")
 ;;                     (:name "wrapfig"))
+		 
 ;;          :preamble ("\\setlist[itemize]{label=\textbullet}"
-;;                     (setlength "\\parskip" "1em")
-;;                     (graphicspath "./img/"))
-;;          :document (document (section* "Menhirs en Bretagne")
-;;                              "This is some text"
-;;                              linebreak
-;;                              (figure "H"
-;;                                      (includegraphics "mad1" :scale "0.8")
-;;                                      (caption "This is a caption.")))))
+;;                     (setlength "\\parskip" "1em"))
+		 
+;;          :body (begin-end "document" "~%" (section* "Menhirs en Bretagne")
+;; 						 "This is some text~%")))
 
 ;; (defun test2 ()
-;;   (let ((ltx (make-latex :documentclass '(:class :article :options "12pt")
-;;                          :packages '((:name "crimson")
-;;                                      (:name "inputenc" :options "utf8")
-;;                                      (:name "graphicx")
-;;                                      (:name "float")
-;;                                      (:name "enumitem")
-;;                                      (:name "wrapfig"))
-;;                          :preamble (list "\\setlist[itemize]{label=\textbullet}"
-;;                                          (setlength "\\parskip" "1em")
-;;                                          (graphicspath "./img/"))
-;;                          :document (list (section* "Menhirs en Bretagne")
-;;                                          "This is some text"
-;;                                          linebreak
-;;                                          (figure "H"
-;;                                                  (includegraphics "mad1" :scale "0.8")
-;;                                                  (caption "This is a caption."))))))
+;;   (let ((ltx (make-latex-document :documentclass '(:class :article :options "12pt")
+;; 								  :packages '((:name "crimson")
+;; 											  (:name "inputenc" :options "utf8")
+;; 											  (:name "float")
+;; 											  (:name "enumitem")
+;; 											  (:name "wrapfig"))
+
+;; 								  :preamble (list "\\setlist[itemize]{label=\textbullet}"
+;; 												  (setlength "\\parskip" "1em")
+;; 												  (graphicspath "./img/"))
+;; 								  :body (list (section* "Menhirs en Bretagne")
+;; 											  "This is some text"))))
 ;;     (to-string ltx)))
 
 (defvar *document-classes*
   '(:article :ieeetran :proc :report :book :slides :memoir :letter :beamer)
   "Generic document classes that come builtin with LaTeX.")
 
-(defmacro latex (&key documentclass packages preamble document)
+(defmacro latex (&key documentclass packages preamble body)
   "Return a LaTeX document string."
   `(format nil (concat-as-lines (write-documentclass ',documentclass)
                                 (write-packages ',packages)
                                 (write-preamble ',preamble)
-                                ,document)))
+                                ,body)))
 
 (defun write-documentclass (documentclass)
   (let ((class (getf documentclass :class))
@@ -188,15 +206,18 @@
 (defun concat-as-lines (&rest args)
   "Concatenate `args' separating each other with a newline character."
   (let ((concatenated-string
-		  (reduce
-		   (lambda (arg1 arg2)
-			 (if (or (null arg1) (null arg2))
-				 (concat-as-string arg1 arg2)
-				 (concat-as-string arg1 "~%" arg2)))
-		   args)))
-	(if (not-empty? concatenated-string)
-		(concat-as-string concatenated-string "~%") ; Add linebreak at the end of the final string
-		"")))
+										(reduce
+											(lambda (arg1 arg2)
+													(if (or (null arg1)
+																					(null arg2)
+																					(string-equal arg1 "~%")
+																					(string-equal arg2 "~%"))
+																	(concat-as-string arg1 arg2)
+																	(concat-as-string arg1 "~%" arg2)))
+											args)))
+				(if (not-empty? concatenated-string)
+								(concat-as-string concatenated-string "~%") ; Add linebreak at the end of the final string
+								"")))
 
 (defun surround-string (str1 str2 &rest rest)
   "Surround strings from `rest' with `str1' and `str2'."
@@ -259,9 +280,6 @@
 
 (defun input (filename)
   (element "input" filename))
-
-(defun document (&rest elements)
-  (apply #'begin-end "document" elements))
 
 (defun pagestyle (style)
   (element "pagestyle" style))
